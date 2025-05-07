@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/rootLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:id="@+id/main"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true">
+
+            <RelativeLayout
+                android:id="@+id/mainBlock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/mainText"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="#FF0000"
+                android:textColor="#FFFFFF"
+                android:text="void Main"
+                android:padding="16dp" />
+
+            <TextView
+                android:id="@+id/mainSlot"
+                android:layout_below="@id/mainText"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="#909090"
+                android:visibility="gone"/>
+
+            </RelativeLayout>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/menu"
+        android:layout_width="250dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:paddingTop="200dp">
+
+        <TextView
+            android:layout_width="250dp"
+            android:layout_height="50dp"
+            android:background="#0000FF"
+            android:textColor="#FFFFFF"
+            android:text="Block 1"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="250dp"
+            android:layout_height="50dp"
+            android:background="#00FF00"
+            android:textColor="#FFFFFF"
+            android:text="Block 2"
+            android:padding="16dp" />
+
+        <TextView
+            android:layout_width="250dp"
+            android:layout_height="50dp"
+            android:background="#000000"
+            android:textColor="#FFFFFF"
+            android:text="Block 3"
+            android:padding="16dp" />
+
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>
+
