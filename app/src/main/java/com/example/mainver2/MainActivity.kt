@@ -215,4 +215,5 @@ class MainActivity : AppCompatActivity() {
 
         return new
     }
+//    program.add {compare(1, 2, "<")}
 }
