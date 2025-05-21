@@ -18,15 +18,21 @@ import androidx.core.view.children
 import android.util.Log
 import android.graphics.Rect
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.transition.Visibility
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 @SuppressLint("ClickableViewAccessibility")
 class MainActivity : AppCompatActivity() {
     private lateinit var rootLayout: RelativeLayout
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var mainContainer: RelativeLayout
+    private lateinit var trashBin: ImageView
+    private lateinit var console: TextView
+    private lateinit var runButton: FloatingActionButton
+    private lateinit var stopButton: FloatingActionButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +48,29 @@ class MainActivity : AppCompatActivity() {
 
         mainContainer = findViewById(R.id.main)
         mainContainer.setOnTouchListener {v, event -> handleMove(v, event)}
+
+        trashBin = findViewById(R.id.trashBin)
+        console = findViewById(R.id.console)
+        runButton = findViewById(R.id.runButton)
+        runButton.setOnClickListener {run()}
+        stopButton = findViewById(R.id.stopButton)
+        stopButton.setOnClickListener {stop()}
+    }
+
+    private fun run(): Boolean {
+        console.visibility = View.VISIBLE
+        runButton.visibility = View.GONE
+        stopButton.visibility = View.VISIBLE
+
+        return true
+    }
+
+    private fun stop(): Boolean {
+        console.visibility = View.GONE
+        runButton.visibility = View.VISIBLE
+        stopButton.visibility = View.GONE
+
+        return true
     }
 
     private var dx = 0f
@@ -79,6 +108,17 @@ class MainActivity : AppCompatActivity() {
                 v.x = event.rawX - dx
                 v.y = event.rawY - dy
                 if (v.id == R.id.main) return true
+                if (isViewIntersect(v, trashBin)){
+                    if (!trashBin.isVisible) trashBin.visibility = View.VISIBLE
+                    if (slot != null){
+                        (slot as TextView).visibility = View.GONE
+                        slot = null
+                    }
+                    return true
+                }
+                else if (trashBin.isVisible) {
+                    trashBin.visibility = View.INVISIBLE
+                }
                 if (!isViewInsideLayout(v, mainContainer)) {
                     if (slot != null){
                         (slot as TextView).visibility = View.GONE
@@ -107,6 +147,11 @@ class MainActivity : AppCompatActivity() {
             }
             MotionEvent.ACTION_UP -> {
                 if (v.id == R.id.main) return true
+                if (trashBin.isVisible) {
+                    (v.parent as ViewGroup).removeView(v)
+                    trashBin.visibility = View.INVISIBLE
+                    return false
+                }
                 if (slot?.isVisible == true) {
                     (v.parent as ViewGroup).removeView(v)
                     var connection: RelativeLayout? = null
@@ -132,6 +177,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return false
+    }
+
+    private fun isViewIntersect(view1: View, view2: View): Boolean {
+        val rect1 = Rect()
+        view1.getGlobalVisibleRect(rect1)
+        val rect2 = Rect()
+        view2.getGlobalVisibleRect(rect2)
+        return Rect.intersects(rect1, rect2)
     }
 
     private fun isViewInsideLayout(v: View, layout: ViewGroup): Boolean {
@@ -215,5 +268,7 @@ class MainActivity : AppCompatActivity() {
 
         return new
     }
+
+
 //    program.add {compare(1, 2, "<")}
 }
