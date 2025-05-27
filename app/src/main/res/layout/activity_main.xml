@@ -4,93 +4,125 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/light_gray">
+
 
     <RelativeLayout
         android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/runButton"
+        <ImageButton
+            android:id="@+id/imageButtonBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="50dp"
-            android:backgroundTint="@android:color/holo_green_light"
-            app:srcCompat="@android:drawable/ic_media_play"/>
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_back" />
+
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="48dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@android:color/holo_blue_light"
+                android:stateListAnimator="@null"
+                app:srcCompat="@android:drawable/ic_menu_save" />
+
+
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/trashBin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@android:color/darker_gray"
+                android:stateListAnimator="@null"
+                app:srcCompat="@android:drawable/ic_menu_delete" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/runButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@android:color/holo_green_light"
+                android:stateListAnimator="@null"
+                app:srcCompat="@android:drawable/ic_media_play" />
+        </LinearLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/stopButton"
-            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="50dp"
+            android:layout_margin="16dp"
             android:backgroundTint="@android:color/holo_red_light"
-            app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"/>
+            app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"
+            android:stateListAnimator="@null" />
 
         <RelativeLayout
             android:id="@+id/main"
             android:layout_width="250dp"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true">
+            android:layout_centerInParent="true">
 
             <RelativeLayout
                 android:id="@+id/mainBlock"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/mainText"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="#FF0000"
-                android:textColor="#FFFFFF"
-                android:text="void Main"
-                android:padding="16dp" />
+                <TextView
+                    android:id="@+id/mainText"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="#FF0000"
+                    android:padding="16dp"
+                    android:text="void Main"
+                    android:textColor="#FFFFFF" />
 
-            <TextView
-                android:id="@+id/mainSlot"
-                android:layout_below="@id/mainText"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="#909090"
-                android:visibility="gone"/>
-
+                <TextView
+                    android:id="@+id/mainSlot"
+                    android:layout_below="@id/mainText"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="#909090"
+                    android:visibility="gone"/>
             </RelativeLayout>
         </RelativeLayout>
-
-        <ImageView
-            android:id="@+id/trashBin"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:background="#9B9B9B"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="55dp"
-            android:visibility="invisible"/>
 
         <TextView
             android:id="@+id/console"
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_alignParentBottom="true"
-            android:textColor="#FFFFFF"
             android:background="#2A2A2A"
             android:padding="16dp"
             android:text="test"
+            android:textColor="#FFFFFF"
             android:textSize="20sp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
+
     </RelativeLayout>
 
     <LinearLayout
@@ -98,35 +130,34 @@
         android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:orientation="vertical"
         android:background="@android:color/white"
+        android:orientation="vertical"
         android:paddingTop="200dp">
 
         <TextView
             android:layout_width="250dp"
             android:layout_height="50dp"
             android:background="#0000FF"
-            android:textColor="#FFFFFF"
+            android:padding="16dp"
             android:text="Block 1"
-            android:padding="16dp" />
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:layout_width="250dp"
             android:layout_height="50dp"
             android:background="#00FF00"
-            android:textColor="#FFFFFF"
+            android:padding="16dp"
             android:text="Block 2"
-            android:padding="16dp" />
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:layout_width="250dp"
             android:layout_height="50dp"
             android:background="#000000"
-            android:textColor="#FFFFFF"
+            android:padding="16dp"
             android:text="Block 3"
-            android:padding="16dp" />
+            android:textColor="#FFFFFF" />
 
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>
-

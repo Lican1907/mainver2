@@ -1,6 +1,7 @@
 package com.example.mainver2
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import android.widget.LinearLayout
@@ -18,6 +19,8 @@ import androidx.core.view.children
 import android.util.Log
 import android.graphics.Rect
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
@@ -48,13 +51,18 @@ class MainActivity : AppCompatActivity() {
 
         mainContainer = findViewById(R.id.main)
         mainContainer.setOnTouchListener {v, event -> handleMove(v, event)}
-
         trashBin = findViewById(R.id.trashBin)
         console = findViewById(R.id.console)
         runButton = findViewById(R.id.runButton)
         runButton.setOnClickListener {run()}
         stopButton = findViewById(R.id.stopButton)
         stopButton.setOnClickListener {stop()}
+
+        val buttonBack = findViewById<ImageButton>(R.id.imageButtonBack)
+        buttonBack.setOnClickListener {
+            val intent = Intent(this, StartActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun run(): Boolean {
@@ -109,15 +117,11 @@ class MainActivity : AppCompatActivity() {
                 v.y = event.rawY - dy
                 if (v.id == R.id.main) return true
                 if (isViewIntersect(v, trashBin)){
-                    if (!trashBin.isVisible) trashBin.visibility = View.VISIBLE
                     if (slot != null){
                         (slot as TextView).visibility = View.GONE
                         slot = null
                     }
                     return true
-                }
-                else if (trashBin.isVisible) {
-                    trashBin.visibility = View.INVISIBLE
                 }
                 if (!isViewInsideLayout(v, mainContainer)) {
                     if (slot != null){
@@ -147,9 +151,8 @@ class MainActivity : AppCompatActivity() {
             }
             MotionEvent.ACTION_UP -> {
                 if (v.id == R.id.main) return true
-                if (trashBin.isVisible) {
+                if (isViewIntersect(v, trashBin)) {
                     (v.parent as ViewGroup).removeView(v)
-                    trashBin.visibility = View.INVISIBLE
                     return false
                 }
                 if (slot?.isVisible == true) {
@@ -178,7 +181,6 @@ class MainActivity : AppCompatActivity() {
         }
         return false
     }
-
     private fun isViewIntersect(view1: View, view2: View): Boolean {
         val rect1 = Rect()
         view1.getGlobalVisibleRect(rect1)
@@ -244,13 +246,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun getNewBlock(old: RelativeLayout, top: RelativeLayout): RelativeLayout {
         val new =
-        RelativeLayout(this).apply {
-            id = View.generateViewId()
-            layoutParams = RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.WRAP_CONTENT,
-            ).apply { addRule(RelativeLayout.BELOW, top.id) }
-        }
+            RelativeLayout(this).apply {
+                id = View.generateViewId()
+                layoutParams = RelativeLayout.LayoutParams(
+                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                    RelativeLayout.LayoutParams.WRAP_CONTENT,
+                ).apply { addRule(RelativeLayout.BELOW, top.id) }
+            }
 
         val block = old.children.first()
         old.removeView(block)

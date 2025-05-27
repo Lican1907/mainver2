@@ -2,6 +2,7 @@ package com.example.mainver2
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -14,8 +15,8 @@ class StartActivity : AppCompatActivity() {
         setContentView(R.layout.activity_start)
 
         val buttonUser = findViewById<ImageButton>(R.id.imageButtonUser)
-        val buttonCreateProject = findViewById<ImageButton>(R.id.imageButtonCreateProject)
-        val buttonMyPorjects = findViewById<ImageButton>(R.id.imageButtonMyProjects)
+        val buttonCreateProject = findViewById<Button>(R.id.imageButtonCreateProject)
+        val buttonMyPorjects = findViewById<Button>(R.id.imageButtonMyProjects)
 
 
         buttonUser.setOnClickListener {

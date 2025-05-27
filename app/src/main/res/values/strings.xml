@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Bricode</string>
+    <string name="create_new_project">Create New Project</string>
+    <string name="my_projects">My Projects</string>
 </resources>
