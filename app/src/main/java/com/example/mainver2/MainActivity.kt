@@ -199,23 +199,18 @@ class MainActivity : AppCompatActivity() {
         if (event.action == MotionEvent.ACTION_DOWN) {
             drawerLayout.closeDrawer(GravityCompat.START)
 
-            val new =
-                RelativeLayout(this).apply {
-                    id = View.generateViewId()
-                    layoutParams = RelativeLayout.LayoutParams(
-                        RelativeLayout.LayoutParams.MATCH_PARENT,
-                        RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    )
-                }
-
-            val block = TextView(this).apply {
-                layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
-                background = v.background
-                setTextColor("#FFFFFF".toColorInt())
-                text = (v as TextView).text
-                setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+            val newBlockContainer = RelativeLayout(this).apply {
+                id = View.generateViewId()
+                layoutParams = RelativeLayout.LayoutParams(
+                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                )
             }
-            new.addView(block)
+
+            val blockView = createBlockById(v.id)
+            blockView?.let {
+                newBlockContainer.addView(it)
+            }
 
             val slot = TextView(this).apply {
                 layoutParams = RelativeLayout.LayoutParams(
@@ -225,19 +220,63 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor("#909090".toColorInt())
                 visibility = View.GONE
             }
-            new.addView(slot)
+            newBlockContainer.addView(slot)
 
             val rootLayout = findViewById<RelativeLayout>(R.id.rootLayout)
-            rootLayout.addView(new)
+            rootLayout.addView(newBlockContainer)
 
-            new.x = event.rawX
-            new.y = event.rawY
+            newBlockContainer.x = event.rawX
+            newBlockContainer.y = event.rawY
 
-            new.setOnTouchListener { newV, newEvent -> handleMove(newV, newEvent) }
+            newBlockContainer.setOnTouchListener { newV, newEvent -> handleMove(newV, newEvent) }
+
             return true
         }
         return false
     }
+
+    private fun createBlockById(id: Int): View? {
+        return when (id) {
+            R.id.block_init -> {
+                TextView(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                    setBackgroundColor("#FFA500".toColorInt())
+                    setTextColor(Color.WHITE)
+                    text = "init: DO EDITTEXT"
+                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                }
+            }
+            R.id.block_assign -> {
+                TextView(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                    setBackgroundColor("#00AA00".toColorInt())
+                    setTextColor(Color.WHITE)
+                    text = "assignment: DO EDITTEXT = DO EDITTEXT"
+                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                }
+            }
+            R.id.block_math -> {
+                TextView(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                    setBackgroundColor("#0000FF".toColorInt())
+                    setTextColor(Color.WHITE)
+                    text = "arithmetic operation: DO EDITTEXT +-/% DO EDITTEXT"
+                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                }
+            }
+            R.id.block_if -> {
+                TextView(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                    setBackgroundColor("#AA00AA".toColorInt())
+                    setTextColor(Color.WHITE)
+                    text = "if (DO EDITTEXT)"
+                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                }
+            }
+            else -> null
+        }
+    }
+
 
     private fun dpToPx(dp: Float): Int {
         val density = resources.displayMetrics.density

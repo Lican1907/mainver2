@@ -135,27 +135,40 @@
         android:paddingTop="200dp">
 
         <TextView
-            android:layout_width="250dp"
+            android:id="@+id/block_init"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#FFA500"
+            android:padding="16dp"
+            android:text="init variable"
+            android:textColor="#FFFFFF" />
+
+
+        <TextView
+            android:id="@+id/block_assign"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#00AA00"
+            android:padding="16dp"
+            android:text="variable = "
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/block_math"
+            android:layout_width="match_parent"
             android:layout_height="50dp"
             android:background="#0000FF"
             android:padding="16dp"
-            android:text="Block 1"
+            android:text="arithmetic operation"
             android:textColor="#FFFFFF" />
 
         <TextView
-            android:layout_width="250dp"
+            android:id="@+id/block_if"
+            android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#00FF00"
+            android:background="#AA00AA"
             android:padding="16dp"
-            android:text="Block 2"
-            android:textColor="#FFFFFF" />
-
-        <TextView
-            android:layout_width="250dp"
-            android:layout_height="50dp"
-            android:background="#000000"
-            android:padding="16dp"
-            android:text="Block 3"
+            android:text="if (statement)"
             android:textColor="#FFFFFF" />
 
     </LinearLayout>
