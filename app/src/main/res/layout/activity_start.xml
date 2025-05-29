@@ -75,5 +75,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButtonCreateProject" />
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="304dp"
+        android:layout_height="304dp"
+        app:layout_constraintBottom_toTopOf="@+id/imageButtonCreateProject"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appTitle"
+        app:layout_constraintVertical_bias="0.5"
+        app:srcCompat="@drawable/ic_main_picture" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
