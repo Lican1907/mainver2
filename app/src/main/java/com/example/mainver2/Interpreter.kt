@@ -1,6 +1,7 @@
 package com.example.mainver2
 
 class Interpreter {
+    var iterator: Int = 0
     var program: Program
     var reversePolishString: MutableList<String>
     var buffer: MutableList<String> = mutableListOf()
@@ -26,39 +27,78 @@ class Interpreter {
     private fun isVar(el: String): Boolean {
         return el in program.vars
     }
+    private fun isArray(el: String): Boolean {
+        return el in program.arrays
+    }
     private fun isAriphmSign(el: String): Boolean {
         return el in setOf("+", "-", "/", "*", "%")
     }
     private fun isCompareSign(el: String): Boolean {
         return el in setOf(">", "<", "<=", ">=", "==", "!=")
     }
-    private fun runIf(iTrue: Int, iFalse: Int, iCur: Int): Int {
-        if (buffer[2].toBoolean()) {
-            buffer.removeAt(0)
-            buffer.removeAt(1)
-            buffer.removeAt(2)
-            return iTrue
-        }
-        else {
-            buffer.removeAt(0)
-            buffer.removeAt(1)
-            buffer.removeAt(2)
-            return iFalse
+    private fun searchElse() {
+        var counter: Int = 1
+        while (reversePolishString[iterator] != "else" && counter != 0) {
+            iterator +=1
+            if (reversePolishString[iterator] == "if") counter++
+            if (reversePolishString[iterator] == "else") counter--
         }
     }
-    public fun main() {
-        var iterator: Int = 0
-        while (iterator < reversePolishString.size) {
-            var elementOfStack = reversePolishString[iterator]
-            if (isNum(elementOfStack)) {
-                buffer.add(0, elementOfStack)
+    private fun searchCloseBracket() {
+        var counter: Int = 1
+        while (reversePolishString[iterator] != "}" && counter != 0) {
+            iterator +=1
+            if (reversePolishString[iterator] == "{") counter++
+            if (reversePolishString[iterator] == "}") counter--
+        }
+    }
+    private fun runIf() {
+        iterator += 1
+        readReversePolishString()
+        if (buffer[0].toBoolean()) {
+            iterator += 1
+            readReversePolishString()
+        }
+        else {
+            searchElse()
+            iterator += 2
+            readReversePolishString()
+        }
+        buffer.removeAt(0)
+    }
+    private fun runWhile() {
+        var iteratorT: Int = iterator
+        iterator += 1
+        readReversePolishString()
+        while (buffer[0].toBoolean()) {
+            iterator += 1
+            readReversePolishString()
+            iterator = iteratorT
+            readReversePolishString()
+        }
+        searchCloseBracket()
+        iterator += 1
+        readReversePolishString()
+    }
+    public fun readReversePolishString() {
+
+        if (iterator < reversePolishString.size) {
+            if (isNum(reversePolishString[iterator])) {
+                buffer.add(0, reversePolishString[iterator])
                 iterator += 1
+                readReversePolishString()
             }
-            else if (isVar(elementOfStack)) {
-                buffer.add(0, elementOfStack)
+            else if (isVar(reversePolishString[iterator])) {
+                buffer.add(0, reversePolishString[iterator])
                 iterator += 1
+                readReversePolishString()
             }
-            else if (isAriphmSign(elementOfStack)) {
+            else if (isArray(reversePolishString[iterator])) {
+                buffer.add(0, reversePolishString[iterator])
+                iterator += 1
+                readReversePolishString()
+            }
+            else if (isAriphmSign(reversePolishString[iterator])) {
                 if (isVar(buffer[0])) {
                     buffer[0] = program.vars[buffer[0]].toString()
                 }
@@ -68,10 +108,12 @@ class Interpreter {
                 buffer[0] = program.arithmetic(
                     buffer[0].toDouble(),
                     buffer[1].toDouble(),
-                    elementOfStack).toString()
+                    reversePolishString[iterator]).toString()
                 buffer.removeAt(1)
+                iterator += 1
+                readReversePolishString()
             }
-            else if (isCompareSign(elementOfStack)) {
+            else if (isCompareSign(reversePolishString[iterator])) {
                 if (isVar(buffer[0])) {
                     buffer[0] = program.vars[buffer[0]].toString()
                 }
@@ -81,21 +123,55 @@ class Interpreter {
                 buffer[0] = program.compare(
                     buffer[0].toDouble(),
                     buffer[1].toDouble(),
-                    elementOfStack).toString()
+                    reversePolishString[iterator]).toString()
                 buffer.removeAt(1)
+                iterator += 1
+                readReversePolishString()
             }
-            else if (elementOfStack == "init"){
-                program.initializeVar(buffer[0])
-                buffer.removeAt(0)
+            else if (reversePolishString[iterator] == "init"){
+                program.initializeVar(reversePolishString[iterator + 1])
+                iterator += 2
+                readReversePolishString()
             }
-            else if (elementOfStack == "assign") {
+            else if (reversePolishString[iterator] == "initArray") {
+                iterator += 1
+                var array: MutableList<Double> = mutableListOf()
+                var name: String = reversePolishString[iterator]
+                iterator += 2
+                while (isNum(reversePolishString[iterator])) {
+                    array.add(array.size, reversePolishString[iterator].toDouble())
+                }
+                program.initializeArray(name, array)
+                iterator += 1
+                readReversePolishString()
+            }
+            else if (reversePolishString[iterator] == "assign") {
                 program.assignVar(buffer[1], buffer[0].toDouble())
                 buffer.removeAt(0)
-                buffer.removeAt(1)
+                buffer.removeAt(0)
+                iterator += 1
+                readReversePolishString()
             }
-            else if (elementOfStack == "GoTo") {
-                iterator = runIf(buffer[1].toInt(), buffer[0].toInt(), iterator)
+            else if (reversePolishString[iterator] == "assignArray") {
+                program.assignArray(buffer[2], buffer[1].toInt(), buffer[0].toDouble())
+                buffer.removeAt(0)
+                buffer.removeAt(0)
+                buffer.removeAt(0)
+                iterator += 1
+                readReversePolishString()
             }
+            else if (reversePolishString[iterator] == "if") {
+                runIf()
+                iterator += 1
+                readReversePolishString()
+            }
+            else if (reversePolishString[iterator] == "while") {
+                runWhile()
+            }
+            else if (reversePolishString[iterator] == "{" || reversePolishString[iterator] == "}") {
+                return
+            }
+//            readReversePolishString()
         }
     }
 }
