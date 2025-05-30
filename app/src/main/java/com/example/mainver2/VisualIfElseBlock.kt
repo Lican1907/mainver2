@@ -6,7 +6,6 @@ import android.widget.RelativeLayout
 
 class VisualIfElseBlock(private val layout: RelativeLayout) : VisualBlock {
     override fun toDslString(): String {
-        // Извлечение контейнеров строк (если структура фиксирована)
         val conditionContainer = layout.getChildAt(0) as? LinearLayout
         val thenContainer = layout.getChildAt(1) as? LinearLayout
         val elseContainer = layout.getChildAt(2) as? LinearLayout

@@ -76,30 +76,26 @@ class MainActivity : AppCompatActivity() {
         runButton.visibility = View.GONE
         stopButton.visibility = View.VISIBLE
 
-        // 1. Извлекаем визуальные блоки из `mainContainer`
+
         val visualBlocks = extractVisualBlocks(mainContainer)
 
-        // 2. Генерируем DSL-код
         val dslCode = generateDslCodeFromVisualBlocks(visualBlocks)
-        Log.d("DSL-Code", "DSL Code:\n$dslCode")
-        println("DSL Code:\n$dslCode")
+        //Log.d("DSL-Code", "DSL Code:\n$dslCode")
+        //Toast.makeText(this, dslCode, Toast.LENGTH_LONG).show()
 
-        // 3. Передаем DSL-код парсеру
         val parser = Parser()
         val astBlocks = parser.parseProgram(dslCode)
 
-        // 4. Компилируем AST в строку RPN
         val rpnString = parser.compileProgramToRpnString(astBlocks)
+        //Log.d("RPN String", "RPN:\n$rpnString")
+        //console.text = "Final RPN string:\n$rpnString"
 
-        Log.d("RPN String", rpnString)
-        println("Final RPN string: $rpnString")
-        console.text = "Final RPN string: \n$rpnString"
-
-        // 5. Запускаем интерпретатор с RPN
-        // executeRpnCode(rpnString)
+        executeRpnCode(rpnString)
 
         return true
     }
+
+
 
     private fun stop(): Boolean {
         console.visibility = View.GONE
@@ -231,8 +227,9 @@ class MainActivity : AppCompatActivity() {
                 id = View.generateViewId()
                 layoutParams = RelativeLayout.LayoutParams(
                     RelativeLayout.LayoutParams.MATCH_PARENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                    dpToPx(100f)
                 )
+                tag = "dynamicBlock"
             }
 
             val blockView = createBlockById(v.id)
@@ -251,10 +248,20 @@ class MainActivity : AppCompatActivity() {
             newBlockContainer.addView(slot)
 
             val rootLayout = findViewById<RelativeLayout>(R.id.rootLayout)
-            rootLayout.addView(newBlockContainer)
 
-            newBlockContainer.x = event.rawX
-            newBlockContainer.y = event.rawY
+            newBlockContainer.tag = "dynamicBlock"
+            rootLayout.addView(newBlockContainer)
+            newBlockContainer.bringToFront()
+
+            //mainContainer.addView(newBlockContainer)
+
+            val containerLocation = IntArray(2)
+            rootLayout.getLocationOnScreen(containerLocation)
+            val localX = event.rawX - containerLocation[0]
+            val localY = event.rawY - containerLocation[1]
+            newBlockContainer.x = localX
+            newBlockContainer.y = localY
+
 
             newBlockContainer.setOnTouchListener { newV, newEvent -> handleMove(newV, newEvent) }
 
@@ -266,18 +273,16 @@ class MainActivity : AppCompatActivity() {
     private fun createBlockById(id: Int): View? {
         return when (id) {
             R.id.block_init -> {
-                // Горизонтальный контейнер
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
                         dpToPx(250f),
                         dpToPx(50f)
                     )
                     orientation = LinearLayout.HORIZONTAL
-                    setBackgroundColor("#FFA500".toColorInt()) // Зеленый цвет
+                    setBackgroundColor("#FFA500".toColorInt())
                     setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
                     gravity = Gravity.CENTER_VERTICAL
 
-                    // Текст "init"
                     TextView(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -290,7 +295,6 @@ class MainActivity : AppCompatActivity() {
                         setPadding(0, 0, dpToPx(4f), 0)
                     }.also { addView(it) }
 
-                    // Первое поле (имя переменной)
                     EditText(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             0,
@@ -308,7 +312,6 @@ class MainActivity : AppCompatActivity() {
                         tag = "init_variable"
                     }.also { addView(it) }
 
-                    // Текст "="
                     TextView(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -321,7 +324,6 @@ class MainActivity : AppCompatActivity() {
                         setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
                     }.also { addView(it) }
 
-                    // Второе поле (значение)
                     EditText(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             0,
@@ -341,7 +343,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             R.id.block_assign -> {
-                // Контейнер с горизонтальной ориентацией
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
                         dpToPx(250f),
@@ -404,17 +405,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             R.id.block_if -> {
-                // Основной вертикальный контейнер
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
-                        dpToPx(320f),  // Ширина увеличена
+                        dpToPx(320f),
                         RelativeLayout.LayoutParams.WRAP_CONTENT
                     )
                     orientation = LinearLayout.VERTICAL
                     setBackgroundColor("#AA00AA".toColorInt())
                     setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
 
-                    // Строка с условием IF
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -424,7 +423,7 @@ class MainActivity : AppCompatActivity() {
 
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(30f),  // Фиксированная ширина для "if"
+                                dpToPx(30f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "if"
@@ -449,7 +448,6 @@ class MainActivity : AppCompatActivity() {
                         }.also { addView(it) }
                     }.also { addView(it) }
 
-                    // Строка с действием THEN
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -460,7 +458,7 @@ class MainActivity : AppCompatActivity() {
 
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(30f),  // Фиксированная ширина для "then"
+                                dpToPx(30f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "then"
@@ -485,7 +483,6 @@ class MainActivity : AppCompatActivity() {
                         }.also { addView(it) }
                     }.also { addView(it) }
 
-                    // Строка с действием ELSE
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -496,7 +493,7 @@ class MainActivity : AppCompatActivity() {
 
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(30f),  // Фиксированная ширина для "else"
+                                dpToPx(30f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "else"
@@ -523,17 +520,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             R.id.block_while -> {
-                // Основной вертикальный контейнер
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
                         dpToPx(300f),
                         RelativeLayout.LayoutParams.WRAP_CONTENT
                     )
                     orientation = LinearLayout.VERTICAL
-                    setBackgroundColor("#880088".toColorInt()) // Темно-фиолетовый цвет
+                    setBackgroundColor("#880088".toColorInt())
                     setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
 
-                    // Строка с условием WHILE
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -541,10 +536,9 @@ class MainActivity : AppCompatActivity() {
                         )
                         orientation = LinearLayout.HORIZONTAL
 
-                        // Текст "while"
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(50f), // Фиксированная ширина для "while"
+                                dpToPx(50f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "while"
@@ -553,7 +547,6 @@ class MainActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER_VERTICAL
                         }.also { addView(it) }
 
-                        // Поле для условия цикла
                         EditText(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0,
@@ -572,19 +565,17 @@ class MainActivity : AppCompatActivity() {
                         }.also { addView(it) }
                     }.also { addView(it) }
 
-                    // Строка с действием DO
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         )
                         orientation = LinearLayout.HORIZONTAL
-                        setPadding(dpToPx(16f), dpToPx(8f), 0, 0) // Отступ для вложенности
+                        setPadding(dpToPx(16f), dpToPx(8f), 0, 0)
 
-                        // Текст "do"
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(50f), // Фиксированная ширина для "do"
+                                dpToPx(50f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "do"
@@ -593,7 +584,6 @@ class MainActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER_VERTICAL
                         }.also { addView(it) }
 
-                        // Поле для действия цикла
                         EditText(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0,
@@ -614,17 +604,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             R.id.block_init_array -> {
-                // Основной вертикальный контейнер
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
                         dpToPx(300f),
                         RelativeLayout.LayoutParams.WRAP_CONTENT
                     )
                     orientation = LinearLayout.VERTICAL
-                    setBackgroundColor("#0099CC".toColorInt()) // Синий цвет
+                    setBackgroundColor("#0099CC".toColorInt())
                     setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
 
-                    // Первая строка - заголовок и имя массива
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -632,10 +620,9 @@ class MainActivity : AppCompatActivity() {
                         )
                         orientation = LinearLayout.HORIZONTAL
 
-                        // Текст "initArray"
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
-                                dpToPx(80f), // Фиксированная ширина
+                                dpToPx(80f),
                                 LinearLayout.LayoutParams.MATCH_PARENT
                             )
                             text = "initArray"
@@ -644,7 +631,6 @@ class MainActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER_VERTICAL
                         }.also { addView(it) }
 
-                        // Поле для имени массива
                         EditText(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0,
@@ -662,16 +648,14 @@ class MainActivity : AppCompatActivity() {
                         }.also { addView(it) }
                     }.also { addView(it) }
 
-                    // Вторая строка - размер массива
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         )
                         orientation = LinearLayout.HORIZONTAL
-                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0) // Отступ для вложенности
+                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0)
 
-                        // Текст "size"
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 dpToPx(80f),
@@ -683,7 +667,6 @@ class MainActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER_VERTICAL
                         }.also { addView(it) }
 
-                        // Поле для размера массива
                         EditText(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0,
@@ -694,14 +677,13 @@ class MainActivity : AppCompatActivity() {
                             setBackgroundColor(Color.WHITE)
                             setTextColor(Color.BLACK)
                             maxLines = 1
-                            inputType = InputType.TYPE_CLASS_NUMBER // Только числа
+                            inputType = InputType.TYPE_CLASS_NUMBER
                             gravity = Gravity.CENTER_VERTICAL
                             setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
                             tag = "array_size"
                         }.also { addView(it) }
                     }.also { addView(it) }
 
-                    // Третья строка - данные массива
                     LinearLayout(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -710,7 +692,6 @@ class MainActivity : AppCompatActivity() {
                         orientation = LinearLayout.HORIZONTAL
                         setPadding(dpToPx(16f), dpToPx(4f), 0, 0)
 
-                        // Текст "data"
                         TextView(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 dpToPx(80f),
@@ -722,7 +703,6 @@ class MainActivity : AppCompatActivity() {
                             gravity = Gravity.CENTER_VERTICAL
                         }.also { addView(it) }
 
-                        // Поле для данных массива
                         EditText(this@MainActivity).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 0,
@@ -742,18 +722,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             R.id.block_print -> {
-                // Горизонтальный контейнер
                 LinearLayout(this).apply {
                     layoutParams = RelativeLayout.LayoutParams(
                         dpToPx(250f),
                         dpToPx(50f)
                     )
                     orientation = LinearLayout.HORIZONTAL
-                    setBackgroundColor("#FF8800".toColorInt()) // Оранжевый цвет
+                    setBackgroundColor("#FF8800".toColorInt())
                     setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
                     gravity = Gravity.CENTER_VERTICAL
 
-                    // Текст "print"
                     TextView(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -766,7 +744,6 @@ class MainActivity : AppCompatActivity() {
                         setPadding(0, 0, dpToPx(8f), 0)
                     }.also { addView(it) }
 
-                    // Поле для выводимого значения
                     EditText(this@MainActivity).apply {
                         layoutParams = LinearLayout.LayoutParams(
                             0,
@@ -822,33 +799,61 @@ class MainActivity : AppCompatActivity() {
         return new
     }
 
-    // Извлекаем все визуальные блоки из контейнера `mainContainer`
     private fun extractVisualBlocks(container: RelativeLayout): List<VisualBlock> {
         val blocks = mutableListOf<VisualBlock>()
-        for (child in container.children) {
-            if (child is RelativeLayout) { // Проверяем, что это блок
+        val childrenList = container.children.toList()
+        Log.d("DEBUG", "Container child count: ${childrenList.size}")
+
+        for (child in childrenList) {
+            if(child is RelativeLayout) {
+                Log.d("DEBUG", "Child: $child, tag: ${child.tag}")
                 val block = createVisualBlockFromLayout(child)
-                if (block != null) blocks.add(block)
+                Log.d("ExtractBlock", "Child id = ${child.id}, block = $block")
+                if (block != null) {
+                    blocks.add(block)
+                }
             }
         }
+        Toast.makeText(this, "Blocks count: ${blocks.size}", Toast.LENGTH_LONG).show()
         return blocks
     }
 
-    // Преобразование `RelativeLayout` (блок) в `VisualBlock`
+
+
+
     private fun createVisualBlockFromLayout(layout: RelativeLayout): VisualBlock? {
-        return when (layout.children.first().id) {
+        val firstChild = layout.children.firstOrNull()
+        Log.d("VisualBlock", "First child id: ${firstChild?.id}")
+        return when (firstChild?.id) {
             R.id.block_init -> VisualInitBlock(layout)
             R.id.block_assign -> VisualAssignBlock(layout)
             R.id.block_if -> VisualIfElseBlock(layout)
             R.id.block_while -> VisualWhileBlock(layout)
             R.id.block_init_array -> VisualInitArrayBlock(layout)
             R.id.block_print -> VisualPrintBlock(layout)
-            else -> null
+            else -> {
+                Log.d("VisualBlock", "Неопределенный тип блока")
+                null
+            }
         }
     }
 
+
     private fun generateDslCodeFromVisualBlocks(blocks: List<VisualBlock>): String {
         return blocks.joinToString("\n") { it.toDslString() }
+    }
+
+    private fun executeRpnCode(rpnString: String) {
+        val tokens: MutableList<String> = rpnString.split(" ").toMutableList()
+
+        val interpreter = Interpreter(tokens)
+
+        interpreter.readReversePolishString()
+
+        val output = "Interpreter output:\n" + interpreter.program.vars.toString()
+
+        Log.d("Interpreter", output)
+        console.text = output
     }
 
 
