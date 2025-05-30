@@ -1,5 +1,6 @@
 package com.example.mainver2
 
+import Parser
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -18,10 +19,15 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.children
 import android.util.Log
 import android.graphics.Rect
+import android.text.InputType
+import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.transition.Visibility
@@ -69,6 +75,28 @@ class MainActivity : AppCompatActivity() {
         console.visibility = View.VISIBLE
         runButton.visibility = View.GONE
         stopButton.visibility = View.VISIBLE
+
+        // 1. Извлекаем визуальные блоки из `mainContainer`
+        val visualBlocks = extractVisualBlocks(mainContainer)
+
+        // 2. Генерируем DSL-код
+        val dslCode = generateDslCodeFromVisualBlocks(visualBlocks)
+        Log.d("DSL-Code", "DSL Code:\n$dslCode")
+        println("DSL Code:\n$dslCode")
+
+        // 3. Передаем DSL-код парсеру
+        val parser = Parser()
+        val astBlocks = parser.parseProgram(dslCode)
+
+        // 4. Компилируем AST в строку RPN
+        val rpnString = parser.compileProgramToRpnString(astBlocks)
+
+        Log.d("RPN String", rpnString)
+        println("Final RPN string: $rpnString")
+        console.text = "Final RPN string: \n$rpnString"
+
+        // 5. Запускаем интерпретатор с RPN
+        // executeRpnCode(rpnString)
 
         return true
     }
@@ -238,39 +266,523 @@ class MainActivity : AppCompatActivity() {
     private fun createBlockById(id: Int): View? {
         return when (id) {
             R.id.block_init -> {
-                TextView(this).apply {
-                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
-                    setBackgroundColor("#FFA500".toColorInt())
-                    setTextColor(Color.WHITE)
-                    text = "init: DO EDITTEXT"
-                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                // Горизонтальный контейнер
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(250f),
+                        dpToPx(50f)
+                    )
+                    orientation = LinearLayout.HORIZONTAL
+                    setBackgroundColor("#FFA500".toColorInt()) // Зеленый цвет
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+                    gravity = Gravity.CENTER_VERTICAL
+
+                    // Текст "init"
+                    TextView(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT
+                        )
+                        text = "init"
+                        setTextColor(Color.WHITE)
+                        textSize = 16f
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(0, 0, dpToPx(4f), 0)
+                    }.also { addView(it) }
+
+                    // Первое поле (имя переменной)
+                    EditText(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                        hint = "variable"
+                        setBackgroundColor(Color.WHITE)
+                        setTextColor(Color.BLACK)
+                        maxLines = 1
+                        isSingleLine = true
+                        inputType = InputType.TYPE_CLASS_TEXT
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                        tag = "init_variable"
+                    }.also { addView(it) }
+
+                    // Текст "="
+                    TextView(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT
+                        )
+                        text = "="
+                        setTextColor(Color.WHITE)
+                        textSize = 16f
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                    }.also { addView(it) }
+
+                    // Второе поле (значение)
+                    EditText(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                        hint = "value"
+                        setBackgroundColor(Color.WHITE)
+                        setTextColor(Color.BLACK)
+                        maxLines = 1
+                        isSingleLine = true
+                        inputType = InputType.TYPE_CLASS_TEXT
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                        tag = "init_value"
+                    }.also { addView(it) }
                 }
             }
             R.id.block_assign -> {
-                TextView(this).apply {
-                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                // Контейнер с горизонтальной ориентацией
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(250f),
+                        dpToPx(50f)
+                    )
+                    orientation = LinearLayout.HORIZONTAL
                     setBackgroundColor("#00AA00".toColorInt())
-                    setTextColor(Color.WHITE)
-                    text = "assignment: DO EDITTEXT = DO EDITTEXT"
-                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
-                }
-            }
-            R.id.block_math -> {
-                TextView(this).apply {
-                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
-                    setBackgroundColor("#0000FF".toColorInt())
-                    setTextColor(Color.WHITE)
-                    text = "arithmetic operation: DO EDITTEXT +-/% DO EDITTEXT"
-                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+
+                    val inputFirst = EditText(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            2f
+                        )
+                        setBackgroundColor(Color.WHITE)
+                        setTextColor(Color.BLACK)
+                        hint = "varName"
+                        maxLines = 1
+                        isSingleLine = true
+                        setLines(1)
+                        inputType = InputType.TYPE_CLASS_TEXT
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                        tag = "assign_input_first"
+                    }
+
+                    val label = TextView(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            1f
+                        )
+                        text = " = "
+                        setTextColor(Color.WHITE)
+                        textSize = 16f
+                    }
+
+                    val inputSecond = EditText(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            2f
+                        )
+                        setBackgroundColor(Color.WHITE)
+                        setTextColor(Color.BLACK)
+                        hint = "value"
+                        maxLines = 1
+                        isSingleLine = true
+                        setLines(1)
+                        inputType = InputType.TYPE_CLASS_TEXT
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                        tag = "assign_input_second"
+                    }
+
+                    addView(inputFirst)
+                    addView(label)
+                    addView(inputSecond)
                 }
             }
             R.id.block_if -> {
-                TextView(this).apply {
-                    layoutParams = RelativeLayout.LayoutParams(dpToPx(250f), dpToPx(50f))
+                // Основной вертикальный контейнер
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(320f),  // Ширина увеличена
+                        RelativeLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
                     setBackgroundColor("#AA00AA".toColorInt())
-                    setTextColor(Color.WHITE)
-                    text = "if (DO EDITTEXT)"
-                    setPadding(dpToPx(16f), dpToPx(16f), dpToPx(16f), dpToPx(16f))
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+
+                    // Строка с условием IF
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(30f),  // Фиксированная ширина для "if"
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "if"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "condition"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "if_condition"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+
+                    // Строка с действием THEN
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0)
+
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(30f),  // Фиксированная ширина для "then"
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "then"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "action"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "if_then"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+
+                    // Строка с действием ELSE
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0)
+
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(30f),  // Фиксированная ширина для "else"
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "else"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "alternative action"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "if_else"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+                }
+            }
+            R.id.block_while -> {
+                // Основной вертикальный контейнер
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(300f),
+                        RelativeLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    setBackgroundColor("#880088".toColorInt()) // Темно-фиолетовый цвет
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+
+                    // Строка с условием WHILE
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+
+                        // Текст "while"
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(50f), // Фиксированная ширина для "while"
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "while"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        // Поле для условия цикла
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "condition"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            isSingleLine = true
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "while_condition"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+
+                    // Строка с действием DO
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(dpToPx(16f), dpToPx(8f), 0, 0) // Отступ для вложенности
+
+                        // Текст "do"
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(50f), // Фиксированная ширина для "do"
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "do"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        // Поле для действия цикла
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "action"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            isSingleLine = true
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "while_action"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+                }
+            }
+            R.id.block_init_array -> {
+                // Основной вертикальный контейнер
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(300f),
+                        RelativeLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    orientation = LinearLayout.VERTICAL
+                    setBackgroundColor("#0099CC".toColorInt()) // Синий цвет
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+
+                    // Первая строка - заголовок и имя массива
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+
+                        // Текст "initArray"
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(80f), // Фиксированная ширина
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "initArray"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        // Поле для имени массива
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "arrayName"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "array_name"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+
+                    // Вторая строка - размер массива
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0) // Отступ для вложенности
+
+                        // Текст "size"
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(80f),
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "size"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        // Поле для размера массива
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "arraySize"
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_NUMBER // Только числа
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "array_size"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+
+                    // Третья строка - данные массива
+                    LinearLayout(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        orientation = LinearLayout.HORIZONTAL
+                        setPadding(dpToPx(16f), dpToPx(4f), 0, 0)
+
+                        // Текст "data"
+                        TextView(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                dpToPx(80f),
+                                LinearLayout.LayoutParams.MATCH_PARENT
+                            )
+                            text = "data"
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            gravity = Gravity.CENTER_VERTICAL
+                        }.also { addView(it) }
+
+                        // Поле для данных массива
+                        EditText(this@MainActivity).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                0,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
+                            )
+                            hint = "1,2,3,..."
+                            setBackgroundColor(Color.WHITE)
+                            setTextColor(Color.BLACK)
+                            maxLines = 1
+                            inputType = InputType.TYPE_CLASS_TEXT
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dpToPx(4f), 0, dpToPx(4f), 0)
+                            tag = "array_data"
+                        }.also { addView(it) }
+                    }.also { addView(it) }
+                }
+            }
+            R.id.block_print -> {
+                // Горизонтальный контейнер
+                LinearLayout(this).apply {
+                    layoutParams = RelativeLayout.LayoutParams(
+                        dpToPx(250f),
+                        dpToPx(50f)
+                    )
+                    orientation = LinearLayout.HORIZONTAL
+                    setBackgroundColor("#FF8800".toColorInt()) // Оранжевый цвет
+                    setPadding(dpToPx(8f), dpToPx(8f), dpToPx(8f), dpToPx(8f))
+                    gravity = Gravity.CENTER_VERTICAL
+
+                    // Текст "print"
+                    TextView(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT
+                        )
+                        text = "print"
+                        setTextColor(Color.WHITE)
+                        textSize = 16f
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(0, 0, dpToPx(8f), 0)
+                    }.also { addView(it) }
+
+                    // Поле для выводимого значения
+                    EditText(this@MainActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                        hint = "variable"
+                        setBackgroundColor(Color.WHITE)
+                        setTextColor(Color.BLACK)
+                        maxLines = 1
+                        isSingleLine = true
+                        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                        gravity = Gravity.CENTER_VERTICAL
+                        setPadding(dpToPx(8f), dpToPx(4f), dpToPx(8f), dpToPx(4f))
+                        tag = "print_value"
+                    }.also { addView(it) }
                 }
             }
             else -> null
@@ -308,6 +820,35 @@ class MainActivity : AppCompatActivity() {
         new.setOnTouchListener {v, event -> handleMove(v, event)}
 
         return new
+    }
+
+    // Извлекаем все визуальные блоки из контейнера `mainContainer`
+    private fun extractVisualBlocks(container: RelativeLayout): List<VisualBlock> {
+        val blocks = mutableListOf<VisualBlock>()
+        for (child in container.children) {
+            if (child is RelativeLayout) { // Проверяем, что это блок
+                val block = createVisualBlockFromLayout(child)
+                if (block != null) blocks.add(block)
+            }
+        }
+        return blocks
+    }
+
+    // Преобразование `RelativeLayout` (блок) в `VisualBlock`
+    private fun createVisualBlockFromLayout(layout: RelativeLayout): VisualBlock? {
+        return when (layout.children.first().id) {
+            R.id.block_init -> VisualInitBlock(layout)
+            R.id.block_assign -> VisualAssignBlock(layout)
+            R.id.block_if -> VisualIfElseBlock(layout)
+            R.id.block_while -> VisualWhileBlock(layout)
+            R.id.block_init_array -> VisualInitArrayBlock(layout)
+            R.id.block_print -> VisualPrintBlock(layout)
+            else -> null
+        }
+    }
+
+    private fun generateDslCodeFromVisualBlocks(blocks: List<VisualBlock>): String {
+        return blocks.joinToString("\n") { it.toDslString() }
     }
 
 

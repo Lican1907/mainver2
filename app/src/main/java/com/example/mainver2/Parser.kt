@@ -1,22 +1,26 @@
-package com.example.mainver2
-
+// Определение типов блоков DSL (AST)
 sealed class Block {
-    data class Init(val varName: String) : Block()
-    data class Assign(val varName: String, val rpn: List<String>) : Block()
-    data class Arithmetic(val varName: String, val rpn: List<String>) : Block()
-    data class Compare(val varName: String, val rpn: List<String>) : Block()
-    data class If(val varName: String, val rpn: List<String>) : Block()
-    object Else : Block()
-    data class While(val varName: String, val rpn: List<String>) : Block()
-    data class InitArray(val arrayName: String, val size: Int) : Block()
-    data class AssignArray(val arrayName: String, val index: Int, val rpn: List<String>) : Block()
-    data class GetArray(val varName: String, val arrayName: String, val index: Int) : Block()
+    data class Init(val name: String) : Block()
+    // Для assign храним RPN-строку, где вместо "=" используется слово "assign"
+    data class Assign(val rpn: String) : Block()
+    data class InitArray(val name: String, val size: Int, val elements: List<Int>? = null) : Block()
+    data class AssignArray(val name: String, val index: String, val rpn: String) : Block()
+    // Условия if-else: условие хранится в виде RPN-строки, thenBody – список блоков then, elseBody – список блоков else
+    data class IfElse(val condition: String, val thenBody: List<Block>, val elseBody: List<Block>) : Block()
+    // Цикл while: условие – RPN-строка, body – список блоков
+    data class While(val condition: String, val body: List<Block>) : Block()
+    data class Print(val value: String) : Block() // Новая команда print
     object Unknown : Block()
 }
 
+// Парсер DSL
 class Parser {
+    private var currentIndex = 0
+    private lateinit var lines: List<String>
 
+    // Приоритет операторов (оператор присваивания "=" имеет самый низкий приоритет)
     private val precedence = mapOf(
+        "=" to 0,
         "||" to 1,
         "&&" to 2,
         "==" to 3, "!=" to 3,
@@ -25,161 +29,195 @@ class Parser {
         "*" to 6, "/" to 6, "%" to 6
     )
 
-    private fun isOperator(token: String): Boolean = precedence.containsKey(token)
+    // Определяем, является ли оператор справаассоциативным (только "=" считается правосторонним)
+    private fun isRightAssociative(op: String): Boolean = op == "="
+    private fun isOperator(token: String) = precedence.containsKey(token)
 
-    private fun infixToRPN(tokens: List<String>): List<String> {
-        val output = mutableListOf<String>()
-        val stack = ArrayDeque<String>()
-
-        for (token in tokens) {
-            when {
-                token.matches(Regex("[a-zA-Z_][a-zA-Z0-9_]*")) || token.matches(Regex("\\d+")) -> {
-                    output.add(token)
-                }
-                isOperator(token) -> {
-                    while (stack.isNotEmpty() && isOperator(stack.last())
-                        && precedence[token]!! <= precedence[stack.last()]!!) {
-                        output.add(stack.removeLast())
-                    }
-                    stack.add(token)
-                }
-                token == "(" -> stack.add(token)
-                token == ")" -> {
-                    while (stack.isNotEmpty() && stack.last() != "(") {
-                        output.add(stack.removeLast())
-                    }
-                    if (stack.isEmpty() || stack.last() != "(") {
-                        return listOf("ERROR: mismatched parentheses")
-                    }
-                    stack.removeLast()
-                }
-                else -> return listOf("ERROR: unknown token '$token'")
-            }
-        }
-
-        while (stack.isNotEmpty()) {
-            val op = stack.removeLast()
-            if (op == "(" || op == ")") {
-                return listOf("ERROR: mismatched parentheses")
-            }
-            output.add(op)
-        }
-
-        return output
-    }
-
+    // Токенизация выражения: выделяет пробелами операторы, скобки и т.д.
     private fun tokenize(expr: String): List<String> {
-        val spaced = expr
-            .replace(Regex("([()])"), " $1 ")
+        return expr
+            .replace("(", " ( ")
+            .replace(")", " ) ")
             .replace("&&", " && ")
             .replace("||", " || ")
             .replace(">=", " >= ")
             .replace("<=", " <= ")
             .replace("==", " == ")
             .replace("!=", " != ")
-            .replace(Regex("(?<=[^<>!=])([<>])(?=[^=])"), " $1 ")
-            .replace(Regex("(?<=[^!<>=])([=])(?=[^=])"), " $1 ")
-        return spaced.trim().split(Regex("\\s+"))
+            .replace("=", " = ")
+            .split(Regex("\\s+"))
+            .filter { it.isNotEmpty() }
     }
 
-    fun parse(input: String): Block {
-        val trimmed = input.trim()
-        if (trimmed.isEmpty()) return Block.Unknown
+    // Алгоритм сортировочной станции для преобразования инфиксного выражения в обратную польскую запись (RPN).
+    private fun infixToRpn(tokens: List<String>): List<String> {
+        val output = mutableListOf<String>()
+        val opStack = mutableListOf<String>()
+        for (token in tokens) {
+            when {
+                token.matches(Regex("\\d+")) || token.matches(Regex("[a-zA-Z_]+")) ->
+                    output.add(token)
+                isOperator(token) -> {
+                    while (opStack.isNotEmpty() && isOperator(opStack.last())) {
+                        if (isRightAssociative(token)) {
+                            if (precedence[opStack.last()]!! > precedence[token]!!)
+                                output.add(opStack.removeAt(opStack.size - 1))
+                            else break
+                        } else {
+                            if (precedence[opStack.last()]!! >= precedence[token]!!)
+                                output.add(opStack.removeAt(opStack.size - 1))
+                            else break
+                        }
+                    }
+                    opStack.add(token)
+                }
+                token == "(" -> opStack.add(token)
+                token == ")" -> {
+                    while (opStack.isNotEmpty() && opStack.last() != "(") {
+                        output.add(opStack.removeAt(opStack.size - 1))
+                    }
+                    if (opStack.isNotEmpty() && opStack.last() == "(")
+                        opStack.removeAt(opStack.size - 1)
+                }
+                else -> { /* игнорируем неизвестные токены */ }
+            }
+        }
+        while (opStack.isNotEmpty())
+            output.add(opStack.removeAt(opStack.size - 1))
+        return output
+    }
 
-        val commandParts = trimmed.split(" ", limit = 2)
-        val command = commandParts[0]
-        val rest = if (commandParts.size > 1) commandParts[1] else ""
+    // Преобразование инфиксного выражения в RPN-строку: токены объединяются через пробел.
+    // Если последний токен равен "=" (оператор присваивания), мы заменяем его на слово "assign".
+    private fun infixExprToRpnString(expr: String): String {
+        val tokens = tokenize(expr)
+        val rpnTokens = infixToRpn(tokens).toMutableList()
+        if (rpnTokens.isNotEmpty() && rpnTokens.last() == "=") {
+            rpnTokens[rpnTokens.lastIndex] = "assign"
+        }
+        return rpnTokens.joinToString(" ")
+    }
 
+    // Основная функция парсера: разбивает входной текст на строки, удаляет завершающие ";" и проводит разбор.
+    fun parseProgram(input: String): List<Block> {
+        lines = input.lines().map { it.trim().removeSuffix(";") }.filter { it.isNotEmpty() }
+        currentIndex = 0
+        return parseBlockSequence()
+    }
+
+    // Рекурсивная функция разбора последовательностей команд, включая поддержку блоков с фигурными скобками.
+    private fun parseBlockSequence(): List<Block> {
+        val blocks = mutableListOf<Block>()
+        while (currentIndex < lines.size) {
+            val line = lines[currentIndex].trim()
+            if (line == "}") {
+                currentIndex++ // Завершение блока
+                break
+            }
+            if (line.startsWith("if")) {
+                blocks.add(parseIfElse())
+            } else if (line.startsWith("while")) {
+                blocks.add(parseWhile())
+            } else {
+                blocks.add(parseLine(line))
+                currentIndex++
+            }
+        }
+        return blocks
+    }
+
+    // Разбор конструкции if-else.
+    // Ожидается формат:
+    //   if (условие) { ... }
+    //   else { ... }
+    private fun parseIfElse(): Block {
+        val ifLine = lines[currentIndex]
+        currentIndex++
+        val condition = extractCondition(ifLine, "if")
+        val conditionRpn = infixExprToRpnString(condition)
+        val thenBody = parseBlockSequence() // Читаем блок then
+        var elseBody = listOf<Block>()
+        if (currentIndex < lines.size) {
+            val nextLine = lines[currentIndex].trim()
+            if (nextLine.startsWith("else")) {
+                currentIndex++ // Читаем строку else
+                elseBody = parseBlockSequence() // Читаем блок else
+            }
+        }
+        return Block.IfElse(conditionRpn, thenBody, elseBody)
+    }
+
+    // Разбор конструкции while.
+    private fun parseWhile(): Block {
+        val whileLine = lines[currentIndex]
+        currentIndex++
+        val condition = extractCondition(whileLine, "while")
+        val conditionRpn = infixExprToRpnString(condition)
+        val body = parseBlockSequence()
+        return Block.While(conditionRpn, body)
+    }
+
+    // Разбор одиночной команды: init, assign, initArray, assignArray.
+    private fun parseLine(line: String): Block {
+        val parts = line.split(Regex("\\s+"), limit = 2)
+        val command = parts[0]
+        val rest = if (parts.size > 1) parts[1] else ""
         return when (command) {
-            "init" -> parseInit(rest)
-            "assign" -> parseAssign(rest)
-            "arithmetic" -> parseArithmetic(rest)
-            "compare" -> parseCompare(rest)
-            "if" -> parseIf(rest)
-            "while" -> parseWhile(rest)
-            "else" -> Block.Else
-            "initArray" -> parseInitArray(rest)
-            "assignArray" -> parseAssignArray(rest)
-            "getArray" -> parseGetArray(rest)
+            "init" -> Block.Init(rest)
+            "assign" -> Block.Assign(infixExprToRpnString(rest))
+            "initArray", "intArray" -> {
+                val expr = rest.replace("=", "").trim()
+                val parts2 = expr.split(Regex("\\s+"), limit = 2)
+                if (parts2.size < 2) Block.Unknown
+                else {
+                    val name = parts2[0]
+                    if (parts2[1].startsWith("{") && parts2[1].endsWith("}")) {
+                        val elems = parts2[1].removePrefix("{").removeSuffix("}")
+                            .split(",").mapNotNull { it.trim().toIntOrNull() }
+                        Block.InitArray(name, elems.size, elems)
+                    } else {
+                        val size = parts2[1].toIntOrNull() ?: return Block.Unknown
+                        Block.InitArray(name, size)
+                    }
+                }
+            }
+            "assignArray" -> {
+                val expr = rest.replace("=", "").trim()
+                val parts2 = expr.split(Regex("\\s+"), limit = 3)
+                if (parts2.size < 3) Block.Unknown
+                else Block.AssignArray(parts2[0], parts2[1], infixExprToRpnString(parts2[2]))
+            }
+            "print" -> Block.Print(rest) // Добавляем обработку print
             else -> Block.Unknown
         }
     }
 
-    private fun parseInit(rest: String): Block {
-        val varName = rest.trim()
-        return if (varName.matches(Regex("[a-zA-Z_][a-zA-Z0-9_]*"))) Block.Init(varName)
-        else Block.Unknown
+    // Извлечение условия из строки вида "if (condition) {" или "while (condition) {"
+    private fun extractCondition(line: String, keyword: String): String {
+        val start = line.indexOf("(")
+        val end = line.indexOf(")")
+        return if (start != -1 && end != -1 && end > start)
+            line.substring(start + 1, end).trim()
+        else ""
     }
 
-    private fun parseAssign(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 2)
-        if (parts.size < 2) return Block.Unknown
-        val varName = parts[0]
-        val expr = parts[1]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.Assign(varName, rpn)
+    // Компиляция (объединение) AST в единую строку RPN.
+    fun compileProgramToRpnString(blocks: List<Block>): String {
+        return blocks.joinToString(" ") { blockToRpn(it) }
     }
 
-    private fun parseArithmetic(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 2)
-        if (parts.size < 2) return Block.Unknown
-        val varName = parts[0]
-        val expr = parts[1]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.Arithmetic(varName, rpn)
-    }
-
-    private fun parseCompare(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 2)
-        if (parts.size < 2) return Block.Unknown
-        val varName = parts[0]
-        val expr = parts[1]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.Compare(varName, rpn)
-    }
-
-    private fun parseIf(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 2)
-        if (parts.size < 2) return Block.Unknown
-        val varName = parts[0]
-        val expr = parts[1]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.If(varName, rpn)
-    }
-
-    private fun parseWhile(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 2)
-        if (parts.size < 2) return Block.Unknown
-        val varName = parts[0]
-        val expr = parts[1]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.While(varName, rpn)
-    }
-
-    private fun parseInitArray(rest: String): Block {
-        val parts = rest.trim().split(" ")
-        if (parts.size != 2) return Block.Unknown
-        val name = parts[0]
-        val size = parts[1].toIntOrNull() ?: return Block.Unknown
-        return Block.InitArray(name, size)
-    }
-
-    private fun parseAssignArray(rest: String): Block {
-        val parts = rest.trim().split(" ", limit = 3)
-        if (parts.size < 3) return Block.Unknown
-        val name = parts[0]
-        val index = parts[1].toIntOrNull() ?: return Block.Unknown
-        val expr = parts[2]
-        val rpn = infixToRPN(tokenize(expr))
-        return Block.AssignArray(name, index, rpn)
-    }
-
-    private fun parseGetArray(rest: String): Block {
-        val parts = rest.trim().split(" ")
-        if (parts.size != 3) return Block.Unknown
-        val varName = parts[0]
-        val arrayName = parts[1]
-        val index = parts[2].toIntOrNull() ?: return Block.Unknown
-        return Block.GetArray(varName, arrayName, index)
+    private fun blockToRpn(block: Block): String = when (block) {
+        is Block.Init -> "init ${block.name}"
+        is Block.Assign -> block.rpn
+        is Block.InitArray ->
+            if (block.elements != null)
+                "intArray ${block.name} {${block.elements.joinToString(" ")}}"
+            else "intArray ${block.name} ${block.size}"
+        is Block.AssignArray -> "assignArray ${block.name} ${block.index} ${block.rpn}"
+        is Block.While -> "while ${block.condition} { ${block.body.joinToString(" ") { blockToRpn(it) }} }"
+        is Block.IfElse -> "if ${block.condition} { ${block.thenBody.joinToString(" ") { blockToRpn(it) }} } else { ${block.elseBody.joinToString(" ") { blockToRpn(it) }} }"
+        is Block.Print -> "print ${block.value}" // Добавляем команду print в RPN
+        else -> ""
     }
 }
+

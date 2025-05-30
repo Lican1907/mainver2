@@ -153,14 +153,6 @@
             android:text="variable = "
             android:textColor="#FFFFFF" />
 
-        <TextView
-            android:id="@+id/block_math"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="#0000FF"
-            android:padding="16dp"
-            android:text="arithmetic operation"
-            android:textColor="#FFFFFF" />
 
         <TextView
             android:id="@+id/block_if"
@@ -169,6 +161,33 @@
             android:background="#AA00AA"
             android:padding="16dp"
             android:text="if (statement)"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/block_while"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#880088"
+            android:padding="16dp"
+            android:text="while (statement)"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/block_init_array"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#0099CC"
+            android:padding="16dp"
+            android:text="array[]"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/block_print"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="#FF8800"
+            android:padding="16dp"
+            android:text="print(variable)"
             android:textColor="#FFFFFF" />
 
     </LinearLayout>
