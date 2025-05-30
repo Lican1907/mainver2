@@ -136,7 +136,7 @@ class StartActivitySecondScreen : AppCompatActivity() {
             ⏳ Только сейчас скидка 30%!
             
             Для оформления подписки пишите:
-            👉 @cmdbtw в Telegram
+            👉 @bricodeofftg в Telegram
             
             Наши специалисты помогут:
             - Подобрать оптимальный тариф
@@ -145,7 +145,7 @@ class StartActivitySecondScreen : AppCompatActivity() {
         """.trimIndent())
             .setPositiveButton("✉️ Написать в Telegram") { _, _ ->
                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://t.me/cmdbtw")
+                    data = Uri.parse("https://t.me/bricodeofftg")
                 }
                 startActivity(intent)
             }
