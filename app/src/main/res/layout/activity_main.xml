@@ -96,10 +96,10 @@
                     android:id="@+id/mainText"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:background="#FF0000"
+                    android:background="@color/red"
                     android:padding="16dp"
-                    android:text="void Main"
-                    android:textColor="#FFFFFF" />
+                    android:text="@string/void_main"
+                    android:textColor="@color/white" />
 
                 <TextView
                     android:id="@+id/mainSlot"
@@ -116,10 +116,10 @@
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_alignParentBottom="true"
-            android:background="#2A2A2A"
+            android:background="@color/gray"
             android:padding="16dp"
-            android:text="test"
-            android:textColor="#FFFFFF"
+            android:text="@string/test"
+            android:textColor="@color/white"
             android:textSize="20sp"
             android:visibility="gone" />
 
@@ -138,57 +138,57 @@
             android:id="@+id/block_init"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#FFA500"
+            android:background="@color/orange"
             android:padding="16dp"
-            android:text="init variable"
-            android:textColor="#FFFFFF" />
+            android:text="@string/init_variable"
+            android:textColor="@color/white" />
 
 
         <TextView
             android:id="@+id/block_assign"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#00AA00"
+            android:background="@color/green"
             android:padding="16dp"
-            android:text="variable = "
-            android:textColor="#FFFFFF" />
+            android:text="@string/variable"
+            android:textColor="@color/white" />
 
 
         <TextView
             android:id="@+id/block_if"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#AA00AA"
+            android:background="@color/violet"
             android:padding="16dp"
-            android:text="if (statement)"
-            android:textColor="#FFFFFF" />
+            android:text="@string/if_statement"
+            android:textColor="@color/white" />
 
         <TextView
             android:id="@+id/block_while"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#880088"
+            android:background="@color/purple"
             android:padding="16dp"
-            android:text="while (statement)"
-            android:textColor="#FFFFFF" />
+            android:text="@string/while_statement"
+            android:textColor="@color/white" />
 
         <TextView
             android:id="@+id/block_init_array"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#0099CC"
+            android:background="@color/light_blue"
             android:padding="16dp"
-            android:text="array[]"
-            android:textColor="#FFFFFF" />
+            android:text="@string/array"
+            android:textColor="@color/white" />
 
         <TextView
             android:id="@+id/block_print"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="#FF8800"
+            android:background="@color/orange_dark"
             android:padding="16dp"
-            android:text="print(variable)"
-            android:textColor="#FFFFFF" />
+            android:text="@string/print_variable"
+            android:textColor="@color/white" />
 
     </LinearLayout>
 

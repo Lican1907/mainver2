@@ -9,4 +9,35 @@
     <string name="privacy_rights">Privacy Rights</string>
     <string name="privacy_preferences">Privacy Preferences</string>
     <string name="remove_ads">Remove Ads</string>
+    <string name="void_main">void Main</string>
+    <string name="test">test</string>
+    <string name="init_variable">init variable</string>
+    <string name="variable">variable =</string>
+    <string name="if_statement">if (statement)</string>
+    <string name="while_statement">while (statement)</string>
+    <string name="array">array[]</string>
+    <string name="print_variable">print(variable)</string>
+
+    <string name="how_to_play_title">How to Program with Blocks</string>
+    <string name="how_to_play_message">1. Drag blocks from the palette\n2. Connect blocks\n3. Run the code</string>
+
+    <string name="about_game_title">About the BlockCoder App</string>
+    <string name="about_game_message">BlockCoder is an environment for learning programming through visual blocks.</string>
+
+    <string name="privacy_rights_title">Your Rights</string>
+    <string name="privacy_rights_message">We do not collect personal data. All data remains on device.</string>
+
+    <string name="privacy_preferences_title">Privacy and Data Collection</string>
+    <string name="privacy_preferences_message">Customize what data you allow to be collected.</string>
+
+    <string name="remove_ads_title">Premium Access</string>
+    <string name="remove_ads_message">Unlock full app features with a subscription.</string>
+
+    <string name="coming_soon_title">Coming Soon</string>
+    <string name="coming_soon_message">This feature is coming in the next update.</string>
+
+    <string name="dialog_positive_button">Got it</string>
+    <string name="dialog_negative_button">Close</string>
+    <string name="dialog_later_button">Later</string>
+    <string name="dialog_ok_button">OK</string>
 </resources>
