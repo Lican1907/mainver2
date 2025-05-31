@@ -1,16 +1,27 @@
 package com.example.mainver2
 
+import android.util.Log
+import android.widget.TextView
+
 class Interpreter {
     var iterator: Int = 0
     var program: Program
     var reversePolishString: MutableList<String>
     var buffer: MutableList<String> = mutableListOf()
+    var console: TextView
 
-    constructor(reversePolishString: MutableList<String>) {
+    constructor(reversePolishString: MutableList<String>, console: TextView) {
         this.reversePolishString = reversePolishString
         this.program = Program()
+        this.console = console
     }
-
+//    private fun checkErrors() {
+//        if ()
+//    }
+    private fun error(message: String) {
+        console.text = message
+        iterator = reversePolishString.size
+    }
     private fun popElement(): String {
         if (reversePolishString.isEmpty()) {
             return "endOfProgram"
@@ -77,12 +88,11 @@ class Interpreter {
             readReversePolishString()
         }
         searchCloseBracket()
-        iterator += 1
-        readReversePolishString()
     }
     public fun readReversePolishString() {
 
         if (iterator < reversePolishString.size) {
+            Log.d("Interpreter", iterator.toString())
             if (isNum(reversePolishString[iterator])) {
                 buffer.add(0, reversePolishString[iterator])
                 iterator += 1
@@ -100,10 +110,22 @@ class Interpreter {
             }
             else if (isAriphmSign(reversePolishString[iterator])) {
                 if (isVar(buffer[0])) {
-                    buffer[0] = program.vars[buffer[0]].toString()
+                    if (buffer.size > 1 && isArray(buffer[1])) {
+                        buffer[0] = program.arrays[buffer[1]]!![buffer[0].toInt()].toString()
+                        buffer.removeAt(1)
+                    }
+                    else {
+                        buffer[0] = program.vars[buffer[0]].toString()
+                    }
                 }
                 if (isVar(buffer[1])) {
-                    buffer[1] = program.vars[buffer[1]].toString()
+                    if (buffer.size > 2 && isArray(buffer[2])) {
+                        buffer[1] = program.arrays[buffer[2]]!![buffer[1].toInt()].toString()
+                        buffer.removeAt(2)
+                    }
+                    else {
+                        buffer[1] = program.vars[buffer[1]].toString()
+                    }
                 }
                 buffer[0] = program.arithmetic(
                     buffer[0].toDouble(),
@@ -115,10 +137,22 @@ class Interpreter {
             }
             else if (isCompareSign(reversePolishString[iterator])) {
                 if (isVar(buffer[0])) {
-                    buffer[0] = program.vars[buffer[0]].toString()
+                    if (buffer.size > 1 && isArray(buffer[1])) {
+                        buffer[0] = program.arrays[buffer[1]]!![buffer[0].toInt()].toString()
+                        buffer.removeAt(1)
+                    }
+                    else {
+                        buffer[0] = program.vars[buffer[0]].toString()
+                    }
                 }
                 if (isVar(buffer[1])) {
-                    buffer[1] = program.vars[buffer[1]].toString()
+                    if (buffer.size > 2 && isArray(buffer[2])) {
+                        buffer[1] = program.arrays[buffer[2]]!![buffer[1].toInt()].toString()
+                        buffer.removeAt(2)
+                    }
+                    else {
+                        buffer[1] = program.vars[buffer[1]].toString()
+                    }
                 }
                 buffer[0] = program.compare(
                     buffer[0].toDouble(),
@@ -128,12 +162,20 @@ class Interpreter {
                 iterator += 1
                 readReversePolishString()
             }
+            else if (reversePolishString[iterator] == "||") {
+                buffer[0] = (buffer[0].toBoolean() || buffer[1].toBoolean()).toString()
+                buffer.removeAt(1)
+            }
+            else if (reversePolishString[iterator] == "&&") {
+                buffer[0] = (buffer[0].toBoolean() && buffer[1].toBoolean()).toString()
+                buffer.removeAt(1)
+            }
             else if (reversePolishString[iterator] == "init"){
                 program.initializeVar(reversePolishString[iterator + 1])
                 iterator += 2
                 readReversePolishString()
             }
-            else if (reversePolishString[iterator] == "initArray") {
+            else if (reversePolishString[iterator] == "intArray") {
                 iterator += 1
                 var array: MutableList<Double> = mutableListOf()
                 var name: String = reversePolishString[iterator]
@@ -146,6 +188,15 @@ class Interpreter {
                 readReversePolishString()
             }
             else if (reversePolishString[iterator] == "assign") {
+                if (isVar(buffer[0])) {
+                    if (buffer.size > 1) {
+                        buffer[0] = program.arrays[buffer[1]]!![buffer[0].toInt()].toString()
+                        buffer.removeAt(1)
+                    }
+                    else {
+                        buffer[0] = program.vars[buffer[0]].toString()
+                    }
+                }
                 program.assignVar(buffer[1], buffer[0].toDouble())
                 buffer.removeAt(0)
                 buffer.removeAt(0)
@@ -153,6 +204,15 @@ class Interpreter {
                 readReversePolishString()
             }
             else if (reversePolishString[iterator] == "assignArray") {
+                if (isVar(buffer[0])) {
+                    if (buffer.size > 1 && isArray(buffer[1])) {
+                        buffer[0] = program.arrays[buffer[1]]!![buffer[0].toInt()].toString()
+                        buffer.removeAt(1)
+                    }
+                    else {
+                        buffer[0] = program.vars[buffer[0]].toString()
+                    }
+                }
                 program.assignArray(buffer[2], buffer[1].toInt(), buffer[0].toDouble())
                 buffer.removeAt(0)
                 buffer.removeAt(0)
@@ -167,11 +227,17 @@ class Interpreter {
             }
             else if (reversePolishString[iterator] == "while") {
                 runWhile()
+                iterator += 1
+                readReversePolishString()
             }
             else if (reversePolishString[iterator] == "{" || reversePolishString[iterator] == "}") {
                 return
             }
+//            else {
+//                error("undefind name" + reversePolishString[iterator])
+//            }
 //            readReversePolishString()
+            Log.d("Interpreter", buffer.toString())
         }
     }
 }
