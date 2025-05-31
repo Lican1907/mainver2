@@ -846,12 +846,12 @@ class MainActivity : AppCompatActivity() {
     private fun executeRpnCode(rpnString: String) {
         val tokens: MutableList<String> = rpnString.split(" ").toMutableList()
 
-        val interpreter = Interpreter(tokens)
+        val interpreter = Interpreter(tokens, console)
 
         interpreter.readReversePolishString()
 
         val output = "Interpreter output:\n" + interpreter.program.vars.toString()
-
+        Log.d("Reverse Polish String", tokens.toString())
         Log.d("Interpreter", output)
         console.text = output
     }
